@@ -1,0 +1,6 @@
+# Rol, ruta en la instancia, SHA-256, URL
+server arclight-neoforge-1.21.1-1.0.1-8ec9529.jar a7ac57eee67c288df3c344e4f35a66d8513d6d0e1300bb58c81667836c2aebe3 https://github.com/IzzelAliz/Arclight/releases/download/FeudalKings/1.0.1/arclight-neoforge-1.21.1-1.0.1-8ec9529.jar
+mod mods/Clumps-neoforge-1.21.1-19.0.0.1.jar b524ccdace2ef8fd19f5b2074f7de1103ac5065c52553f064c00e098346c293e https://cdn.modrinth.com/data/Wnxd13zP/versions/jo7lDoK4/Clumps-neoforge-1.21.1-19.0.0.1.jar
+mod mods/FarmersDelight-1.21.1-1.2.9.jar bdc8dea5ea3f1ee81494a4587a6aef88976d942294a8ceddc3287cf0436bfd4f https://cdn.modrinth.com/data/R2OftAxM/versions/opCbq7uB/FarmersDelight-1.21.1-1.2.9.jar
+mod mods/create-1.21.1-6.0.6.jar 2d403500cd550db452a975ec3d4ba21b6097360d4dd575311112fe322055b1ee https://cdn.modrinth.com/data/LNytGWDc/versions/tS7ygzAE/create-1.21.1-6.0.6.jar
+plugin plugins/LuckPerms-Bukkit-5.5.71.jar 49cecb66fa1fd22a133039a490e9c1e5095a238e7cd66eb9d2a16fe6c897550d https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar
