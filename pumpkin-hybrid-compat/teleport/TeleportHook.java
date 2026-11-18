@@ -1,6 +1,5 @@
 package org.pumpkinhybrid.teleport.agent;
 
-import java.lang.instrument.Instrumentation;
 import java.util.Set;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.asm.Advice;
@@ -10,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.Location;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.patchbukkit.bridge.BridgeUtils;
+import org.pumpkinhybrid.fabric.FabricAgent;
 import patchbukkit.bridge.NativeBridgeFfi;
 import patchbukkit.entity.TeleportEntityRequest;
 
@@ -17,19 +17,11 @@ import static net.bytebuddy.matcher.ElementMatchers.is;
 
 public final class TeleportHook {
     private static final ThreadLocal<Boolean> ACTIVE = new ThreadLocal<>();
-    private static Instrumentation instrumentation;
     private static boolean installed;
-
-    public static void premain(String arguments, Instrumentation agent) {
-        instrumentation = agent;
-    }
 
     public static synchronized void install() {
         if (installed) {
             return;
-        }
-        if (instrumentation == null) {
-            throw new IllegalStateException("Teleport hook requires its Java agent");
         }
         try {
             var method = ServerPlayer.class.getDeclaredMethod(
@@ -39,7 +31,7 @@ public final class TeleportHook {
             new ByteBuddy().redefine(ServerPlayer.class)
                 .visit(Advice.to(RouteTeleport.class).on(is(method)))
                 .make()
-                .load(ServerPlayer.class.getClassLoader(), ClassReloadingStrategy.of(instrumentation));
+                .load(ServerPlayer.class.getClassLoader(), ClassReloadingStrategy.of(FabricAgent.instrumentation()));
         } catch (NoSuchMethodException exception) {
             throw new IllegalStateException("Unsupported Paper teleport method", exception);
         }

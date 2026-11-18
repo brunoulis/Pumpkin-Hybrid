@@ -5,7 +5,7 @@ use std::{
     process::Command,
 };
 
-const EXTENSIONS: &str = include_str!("../teleport/artifacts.lock");
+const EXTENSIONS: &str = include_str!("../fabric/artifacts.lock");
 
 pub fn prepare(instance: &Path) -> Result<()> {
     let instance = instance.canonicalize()?;
@@ -20,19 +20,27 @@ pub fn prepare(instance: &Path) -> Result<()> {
     }
 
     let plugins = base.join("patchbukkit-plugins");
-    let dependencies = plugins.join("PumpkinHybridTeleport/jars");
+    let libraries = instance.join("fabric-libraries");
+    let mods = instance.join("mods");
     for line in EXTENSIONS.lines().filter(|line| !line.starts_with('#')) {
-        Artifact::parse(line)?.install(&dependencies)?;
+        let artifact = Artifact::parse(line)?;
+        let destination = match artifact.role {
+            "library" => &libraries,
+            "mod" => &mods,
+            _ => return Err(format!("Rol Fabric desconocido: {}", artifact.role).into()),
+        };
+        artifact.install(destination)?;
     }
 
     let mut jars = vec![patchbukkit_jar, paper_jar];
     collect_jars(&paper.join("libraries"), &mut jars)?;
+    collect_jars(&libraries, &mut jars)?;
     let work = base.join(format!(".teleport-build-{}", std::process::id()));
     fs::create_dir(&work)?;
     let built = build(&work, &jars).and_then(|()| {
         fs::rename(
-            work.join("teleport-hook.jar"),
-            instance.join("teleport-hook.jar"),
+            work.join("fabric-agent.jar"),
+            instance.join("fabric-agent.jar"),
         )?;
         fs::rename(
             work.join("teleport-bridge.jar"),
@@ -44,7 +52,7 @@ pub fn prepare(instance: &Path) -> Result<()> {
     built?;
     clean?;
     println!(
-        "Agente preparado. Añade -javaagent:teleport-hook.jar a [jvm].extra-args de PatchBukkit."
+        "Fabric preparado. Usa -javaagent:fabric-agent.jar en [jvm].extra-args de PatchBukkit."
     );
     Ok(())
 }
@@ -60,8 +68,16 @@ fn build(work: &Path, jars: &[PathBuf]) -> Result<()> {
             include_bytes!("../teleport/TeleportBridge.java").as_slice(),
         ),
         (
+            "FabricAgent.java",
+            include_bytes!("../fabric/FabricAgent.java").as_slice(),
+        ),
+        (
+            "EmbeddedLauncher.java",
+            include_bytes!("../fabric/EmbeddedLauncher.java").as_slice(),
+        ),
+        (
             "MANIFEST.MF",
-            include_bytes!("../teleport/MANIFEST.MF").as_slice(),
+            include_bytes!("../fabric/MANIFEST.MF").as_slice(),
         ),
     ];
     for (name, contents) in sources {
@@ -83,11 +99,17 @@ fn build(work: &Path, jars: &[PathBuf]) -> Result<()> {
     run(java_tool("javac")
         .args(["--release", "25", "-cp"])
         .arg(classpath)
-        .args(["-d", "agent", "TeleportHook.java"]))?;
+        .args([
+            "-d",
+            "agent",
+            "FabricAgent.java",
+            "EmbeddedLauncher.java",
+            "TeleportHook.java",
+        ]))?;
     run(java_tool("jar").args([
         "--create",
         "--file",
-        "teleport-hook.jar",
+        "fabric-agent.jar",
         "--manifest",
         "MANIFEST.MF",
         "-C",

@@ -16,11 +16,11 @@ Teleport Commands 1.3.5, SHA-256 `bc4d0b93a27fd8e9ef54b5960e4d0ee5df0c2c9c3fe95d
 
 El JAR declara una entrada Fabric, Java 25 y tres Mixins que se aplican a registro de comandos, arranque y muerte del jugador. El primer contrato del puente debe permitir registrar la rama Brigadier, resolver el jugador conectado y la dimensión, leer su posición y aplicar una solicitud de teletransporte. El criterio final es que la posición cambie en el mundo de Pumpkin y que un permiso de LuckPerms regule la acción del mismo jugador. [JAR de Teleport Commands](https://modrinth.com/mod/teleport-commands/version/EDcoFIQF) · [Fuentes del mod](https://github.com/MrSn0wy/TeleportCommands)
 
-El cliente Minecraft 26.3 con Fabric Loader 0.20.1 también entró a la instancia de Pumpkin con PatchBukkit y LuckPerms. El [adaptador experimental](TELEPORT.md) permite repetir `sethome` y `home` sobre esa instancia.
+El cliente Minecraft 26.3 con Fabric Loader 0.20.1 también entró a la instancia de Pumpkin con PatchBukkit y LuckPerms. El [piloto integrado](TELEPORT.md) verifica la carga del JAR desde `mods/`, el registro por Mixins y `sethome` y `home` en esa instancia.
 
 ### Contrato del primer puente
 
-- Probar la carga y transformación de las clases objetivo del JAR antes de que se carguen en la JVM. La compatibilidad de identidad de clases entre Fabric y la JVM headless de PatchBukkit es la primera incógnita. Si el cargador puede descubrir e iniciar el mod sin arrancar un servidor Java, comprobar qué clases de los Mixins ya fueron cargadas y registrar el resultado de cada transformación.
+- Compartir la identidad de clases entre Fabric y PatchBukkit. El piloto conserva las definiciones transformadas de Minecraft para que ByteBuddy pueda redefinirlas más tarde. Extender la comprobación a otros Mixins y a sus dependencias.
 - Reutilizar el registro de comandos y los callbacks de teletransporte de PatchBukkit si pueden transportar las llamadas del mod. El punto de entrada Rust para comandos es [Context::register_command_with_aliases](../../../crates/pumpkin-core/src/plugin/api/context.rs). Las operaciones de jugador terminan en [Player::request_teleport o Player::teleport_world](../../../crates/pumpkin-core/src/entity/player.rs).
 - En la prueba sobre Pumpkin, guardar una posición con `sethome`, mover al jugador mediante un comando Rust y ejecutar `home` con el permiso denegado y después concedido. Medir coordenadas y dimensión desde la sesión Rust. Reiniciar y repetir la vuelta con el mismo hogar. Un fallo de la JVM debe dejar la posición Rust intacta y devolver un error al jugador.
 
@@ -48,4 +48,4 @@ tp PatchProbe 1 100 1
 
 El último resultado del permiso debe ser `true`. En el mundo desechable, `setblock 1 99 1 minecraft:gold_block` prueba una mutación del motor tras la llegada del jugador. Ejecutar `save-all flush` y `stop`, arrancar y repetir el permiso. Con el cliente en la zona, `fill 1 99 1 1 99 1 minecraft:iron_block replace minecraft:gold_block` verifica que el bloque guardado se volvió a cargar.
 
-Para las pruebas locales usé loopback y autenticación desactivada. El resultado cubre un plugin Java y operaciones del motor Rust en una misma sesión. La integración general del cargador Fabric sigue pendiente.
+Para las pruebas locales usé loopback y autenticación desactivada. El resultado cubre un plugin Java y operaciones del motor Rust en una misma sesión. El piloto acota la integración de Fabric a los contratos ejercitados por Teleport Commands.

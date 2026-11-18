@@ -1,0 +1,2 @@
+Premain-Class: org.pumpkinhybrid.fabric.FabricAgent
+Can-Redefine-Classes: true

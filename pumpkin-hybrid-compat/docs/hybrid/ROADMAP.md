@@ -15,7 +15,7 @@ Fijar Minecraft 1.21.1, NeoForge 21.1.192, Arclight FeudalKings 1.0.1 y Java 21.
 
 Ejecutar el JAR Fabric original y el JAR Bukkit original en la misma sesión con el mundo administrado por Pumpkin. Un cliente entra, activa la operación del mod y comprueba que un permiso persistente del plugin cambia el resultado. Comparar los resultados con la instancia de referencia correspondiente y medir el coste del puente. Este paso cumple el mínimo del motor.
 
-El [adaptador experimental de Teleport Commands](TELEPORT.md) ejercita ya el JAR original y el permiso de LuckPerms con el mismo jugador. Para convertirlo en compatibilidad de cargador, integrar el descubrimiento de mods y comprobar la transformación de Mixins antes de cargar las clases de Minecraft en la JVM embebida. Repetir la prueba sin invocar explícitamente los métodos destino de los Mixins y añadir otro JAR del perfil sin un adaptador por mod.
+El [piloto de Teleport Commands](TELEPORT.md) usa Fabric Loader para descubrir el JAR original, resolver sus dependencias y aplicar sus Mixins en la JVM embebida. El adaptador conecta dos comandos con el jugador de Pumpkin y comprueba un permiso de LuckPerms. El siguiente paso es añadir otro JAR del perfil usando la misma infraestructura, comprobar eventos del tick y sustituir el adaptador específico por un registro de comandos configurable.
 
 ## 3. AOT y expansión
 
