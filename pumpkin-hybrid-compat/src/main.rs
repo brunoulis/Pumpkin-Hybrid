@@ -7,6 +7,8 @@ use std::{
     process::{Command, ExitCode, Stdio},
 };
 
+#[cfg(target_os = "linux")]
+mod aot;
 mod teleport;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
@@ -38,6 +40,18 @@ fn execute() -> Result<()> {
         .collect::<Vec<_>>()
         .as_slice()
     {
+        #[cfg(target_os = "linux")]
+        ["aot-pilot", jar, cache, "--null"] => {
+            aot::print_execution(Path::new(jar), Path::new(cache), None)?;
+        }
+        #[cfg(target_os = "linux")]
+        ["aot-pilot", jar, cache, x, y, z] => {
+            aot::print_execution(
+                Path::new(jar),
+                Path::new(cache),
+                Some([x.parse()?, y.parse()?, z.parse()?]),
+            )?;
+        }
         ["prepare-teleport", instance] => teleport::prepare(Path::new(instance))?,
         ["check-fabric", instance] => teleport::check(Path::new(instance))?,
         ["run-fabric", instance, binary] => {
@@ -102,7 +116,7 @@ fn execute() -> Result<()> {
         }
         _ => {
             return Err(
-                "Uso: pumpkin-hybrid-compat prepare [--accept-eula] | prepare-client | run | prepare-teleport <instancia> | check-fabric <instancia> | run-fabric <instancia> <binario-pumpkin>".into(),
+                "Uso: pumpkin-hybrid-compat prepare [--accept-eula] | prepare-client | run | prepare-teleport <instancia> | check-fabric <instancia> | run-fabric <instancia> <binario-pumpkin> | aot-pilot <jar> <caché> <x y z | --null>".into(),
             );
         }
     }
