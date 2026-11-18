@@ -55,12 +55,7 @@ public final class EmbeddedLauncher extends FabricLauncherBase {
 
     public static void initialize(Instrumentation agent) throws Exception {
         var launcher = new EmbeddedLauncher(agent);
-        directory = Path.of("").toAbsolutePath().normalize();
-        setProperties(new HashMap<>());
-        var provider = new PumpkinGame(directory, launcher.minecraftJar());
-        var fabric = FabricLoaderImpl.INSTANCE;
-        fabric.setGameProvider(provider);
-        fabric.load();
+        var fabric = launcher.resolve();
         fabric.freeze();
         fabric.loadClassTweakers();
         FabricMixinBootstrap.init(EnvType.SERVER, fabric);
@@ -103,6 +98,23 @@ public final class EmbeddedLauncher extends FabricLauncherBase {
             }
         });
         fabric.invokeEntrypoints("preLaunch", PreLaunchEntrypoint.class, PreLaunchEntrypoint::onPreLaunch);
+        reportMods(fabric);
+    }
+
+    static void checkDependencies() throws Exception {
+        reportMods(new EmbeddedLauncher(null).resolve());
+    }
+
+    private FabricLoaderImpl resolve() throws Exception {
+        directory = Path.of("").toAbsolutePath().normalize();
+        setProperties(new HashMap<>());
+        var fabric = FabricLoaderImpl.INSTANCE;
+        fabric.setGameProvider(new PumpkinGame(directory, minecraftJar()));
+        fabric.load();
+        return fabric;
+    }
+
+    private static void reportMods(FabricLoaderImpl fabric) {
         var loaded = fabric.getAllMods().stream().map(mod ->
             mod.getMetadata().getId() + "@" + mod.getMetadata().getVersion().getFriendlyString()
         ).sorted().toList();
@@ -221,8 +233,8 @@ public final class EmbeddedLauncher extends FabricLauncherBase {
 
     @Override public void addToClassPath(Path path, String... prefixes) {
         if (prefixes.length != 0) throw new UnsupportedOperationException("restricted Fabric classpath");
-        try {
-            agent.appendToSystemClassLoaderSearch(new JarFile(path.toFile()));
+        try (var archive = new JarFile(path.toFile())) {
+            agent.appendToSystemClassLoaderSearch(archive);
         } catch (IOException exception) {
             throw new IllegalStateException("Cannot add Fabric artifact " + path, exception);
         }
@@ -232,7 +244,8 @@ public final class EmbeddedLauncher extends FabricLauncherBase {
     @Override public void setValidParentClassPath(Collection<Path> paths) { throw new UnsupportedOperationException(); }
     @Override public EnvType getEnvironmentType() { return EnvType.SERVER; }
     @Override public boolean isClassLoaded(String name) {
-        return Arrays.stream(agent.getAllLoadedClasses()).anyMatch(type -> type.getName().equals(name));
+        return agent != null && Arrays.stream(agent.getAllLoadedClasses())
+            .anyMatch(type -> type.getClassLoader() == loader && type.getName().equals(name));
     }
     @Override public Class<?> loadIntoTarget(String name) throws ClassNotFoundException { return loader.loadClass(name); }
     @Override public InputStream getResourceAsStream(String name) { return loader.getResourceAsStream(name); }

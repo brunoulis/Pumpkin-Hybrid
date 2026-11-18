@@ -6,13 +6,36 @@ use std::{
 };
 
 const EXTENSIONS: &str = include_str!("../fabric/artifacts.lock");
+const PAPER_JAR: &str = "plugins/data/patchbukkit/cache/paper/versions/26.3/paper-26.3.jar";
+
+pub fn check(instance: &Path) -> Result<()> {
+    let java_home = env::var_os("JAVA_HOME").map(fs::canonicalize).transpose()?;
+    let java = java_home.map_or_else(|| PathBuf::from("java"), |home| home.join("bin/java"));
+    let classpath = env::join_paths(["fabric-agent.jar", "fabric-libraries/*", PAPER_JAR])?;
+    let status = Command::new(java)
+        .current_dir(instance)
+        .arg("-cp")
+        .arg(classpath)
+        .arg("org.pumpkinhybrid.fabric.FabricAgent")
+        .status()?;
+    if !status.success() {
+        return Err(format!("Falló la comprobación de dependencias de Fabric ({status})").into());
+    }
+    Ok(())
+}
+
+pub fn run_fabric(instance: &Path, binary: &Path) -> Result<()> {
+    let binary = binary.canonicalize()?;
+    check(instance)?;
+    run(Command::new(binary).current_dir(instance))
+}
 
 pub fn prepare(instance: &Path) -> Result<()> {
     let instance = instance.canonicalize()?;
     let base = instance.join("plugins/data/patchbukkit");
     let patchbukkit_jar = base.join("jassets/patchbukkit.jar");
     let paper = base.join("cache/paper");
-    let paper_jar = paper.join("versions/26.3/paper-26.3.jar");
+    let paper_jar = instance.join(PAPER_JAR);
     if !patchbukkit_jar.is_file() || !paper_jar.is_file() {
         return Err(
             "Arranca y detén PatchBukkit con Paper 26.3 antes de preparar el piloto".into(),

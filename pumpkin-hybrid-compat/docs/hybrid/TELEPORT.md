@@ -6,7 +6,7 @@ El piloto usa Fabric Loader 0.20.1 dentro de la JVM de PatchBukkit. El cargador 
 
 1. Completar la [preparación de PatchBukkit y LuckPerms](NATIVE.md) y detener la instancia.
 2. Con un JDK 25, desde el directorio del crate ejecutar `cargo run --locked -- prepare-teleport /ruta/a/instancia`. El comando instala Fabric y el mod con hashes fijados. Compila el agente y el adaptador con el Paper de la instancia.
-3. En `plugins/data/patchbukkit/patchbukkit.config.toml`, usar `"-javaagent:fabric-agent.jar"` en la lista `extra-args` de `[jvm]`. Si la lista contiene el agente experimental `teleport-hook.jar`, sustituir esa entrada y conservar los demás argumentos. Arrancar Pumpkin desde la instancia.
+3. En `plugins/data/patchbukkit/patchbukkit.config.toml`, usar `"-javaagent:fabric-agent.jar"` en la lista `extra-args` de `[jvm]`. Si la lista contiene el agente experimental `teleport-hook.jar`, sustituir esa entrada y conservar los demás argumentos. Arrancar desde este crate con `cargo run --locked -- run-fabric /ruta/a/instancia /ruta/al/binario/pumpkin`.
 4. Esperar `Teleport Commands registered by Fabric Mixins` y entrar con un cliente 26.3. Las pruebas locales usaron Fabric Loader 0.20.1 en el cliente y una instancia desechable en loopback.
 
 ## Prueba reproducible
@@ -31,7 +31,7 @@ Ejecutar `/sethome verified` en el cliente. El mod guarda las coordenadas a nive
 
 En una instancia preparada desde cero el cargador resolvió `teleport_commands@1.3.5`. Con el permiso en falso, el cliente recibió el rechazo y el archivo de datos quedó sin el hogar `blocked`. Con el permiso concedido, el JAR guardó un hogar en el bloque `(12, 49, 12)`. Desde `(44.5, 120, 44.5)`, Pumpkin confirmó el regreso a `(12.5, 49, 12.5)` y mantuvo al jugador conectado. Después del reinicio, LuckPerms confirmó el permiso y el mod volvió a llevar al jugador al destino guardado.
 
-En otra instancia, Random MOTD declaró `fabric-api` como dependencia obligatoria. La resolución de Fabric identificó la dependencia ausente y la JVM embebida terminó el proceso con código 134. Queda pendiente trasladar este error a una salida controlada de Pumpkin con un diagnóstico previo al arranque.
+`run-fabric` ejecuta el mismo resolvedor de Fabric en un proceso Java breve antes de arrancar Pumpkin. Se puede invocar solo esa etapa con `cargo run --locked -- check-fabric /ruta/a/instancia`. Con Random MOTD y sin `fabric-api` la prueba devolvió código 1, nombró la dependencia ausente y dejó el puerto libre. La verificación cubre la resolución de dependencias. La prueba con Fabric API 0.166.2+26.3 completo pasó la resolución y falló al aplicar Mixins a Paper. Los errores incluyeron las firmas de `PlayerList`, `PackRepository` y `CommandSourceStack`, además de inyecciones en los procesos de registro de comandos y congelación de registros.
 
 ## Alcance
 

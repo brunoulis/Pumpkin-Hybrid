@@ -39,6 +39,10 @@ fn execute() -> Result<()> {
         .as_slice()
     {
         ["prepare-teleport", instance] => teleport::prepare(Path::new(instance))?,
+        ["check-fabric", instance] => teleport::check(Path::new(instance))?,
+        ["run-fabric", instance, binary] => {
+            teleport::run_fabric(Path::new(instance), Path::new(binary))?
+        }
         ["prepare"] | ["prepare", "--accept-eula"] => {
             fs::create_dir_all(instance)?;
             write_default(&instance.join("server.properties"), PROPERTIES)?;
@@ -98,7 +102,7 @@ fn execute() -> Result<()> {
         }
         _ => {
             return Err(
-                "Uso: pumpkin-hybrid-compat prepare [--accept-eula] | prepare-client | run | prepare-teleport <instancia>".into(),
+                "Uso: pumpkin-hybrid-compat prepare [--accept-eula] | prepare-client | run | prepare-teleport <instancia> | check-fabric <instancia> | run-fabric <instancia> <binario-pumpkin>".into(),
             );
         }
     }
