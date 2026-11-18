@@ -7,6 +7,8 @@ use std::{
     process::{Command, ExitCode, Stdio},
 };
 
+mod teleport;
+
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 const PROFILE: &str = include_str!("../artifacts.lock");
@@ -36,6 +38,7 @@ fn execute() -> Result<()> {
         .collect::<Vec<_>>()
         .as_slice()
     {
+        ["prepare-teleport", instance] => teleport::prepare(Path::new(instance))?,
         ["prepare"] | ["prepare", "--accept-eula"] => {
             fs::create_dir_all(instance)?;
             write_default(&instance.join("server.properties"), PROPERTIES)?;
@@ -95,7 +98,7 @@ fn execute() -> Result<()> {
         }
         _ => {
             return Err(
-                "Uso: pumpkin-hybrid-compat prepare [--accept-eula] | prepare-client | run".into(),
+                "Uso: pumpkin-hybrid-compat prepare [--accept-eula] | prepare-client | run | prepare-teleport <instancia>".into(),
             );
         }
     }

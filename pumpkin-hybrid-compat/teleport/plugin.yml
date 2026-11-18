@@ -1,0 +1,14 @@
+name: PumpkinHybridTeleport
+main: org.pumpkinhybrid.teleport.TeleportBridge
+version: 0.1.0
+api-version: '26.3'
+softdepend: [LuckPerms]
+commands:
+  sethome:
+    description: Record your home
+  home:
+    description: Return home
+permissions:
+  pumpkinhybrid.home:
+    description: Use Teleport Commands
+    default: false

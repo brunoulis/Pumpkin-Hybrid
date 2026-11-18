@@ -16,7 +16,7 @@ Teleport Commands 1.3.5, SHA-256 `bc4d0b93a27fd8e9ef54b5960e4d0ee5df0c2c9c3fe95d
 
 El JAR declara una entrada Fabric, Java 25 y tres Mixins que se aplican a registro de comandos, arranque y muerte del jugador. El primer contrato del puente debe permitir registrar la rama Brigadier, resolver el jugador conectado y la dimensión, leer su posición y aplicar una solicitud de teletransporte. El criterio final es que la posición cambie en el mundo de Pumpkin y que un permiso de LuckPerms regule la acción del mismo jugador. [JAR de Teleport Commands](https://modrinth.com/mod/teleport-commands/version/EDcoFIQF) · [Fuentes del mod](https://github.com/MrSn0wy/TeleportCommands)
 
-El cliente Minecraft 26.3 con Fabric Loader 0.20.1 también entró a la instancia de Pumpkin con PatchBukkit y LuckPerms. Esto cubre la entrada del cliente con Fabric Loader. El caso anterior de `sethome` y `home` sigue ejecutándose en el servidor Fabric de referencia.
+El cliente Minecraft 26.3 con Fabric Loader 0.20.1 también entró a la instancia de Pumpkin con PatchBukkit y LuckPerms. El [adaptador experimental](TELEPORT.md) permite repetir `sethome` y `home` sobre esa instancia.
 
 ### Contrato del primer puente
 
@@ -48,4 +48,4 @@ tp PatchProbe 1 100 1
 
 El último resultado del permiso debe ser `true`. En el mundo desechable, `setblock 1 99 1 minecraft:gold_block` prueba una mutación del motor tras la llegada del jugador. Ejecutar `save-all flush` y `stop`, arrancar y repetir el permiso. Con el cliente en la zona, `fill 1 99 1 1 99 1 minecraft:iron_block replace minecraft:gold_block` verifica que el bloque guardado se volvió a cargar.
 
-Para las pruebas locales usé loopback y autenticación desactivada. El resultado cubre un plugin Java y operaciones del motor Rust en una misma sesión. La integración de Fabric en el motor sigue pendiente.
+Para las pruebas locales usé loopback y autenticación desactivada. El resultado cubre un plugin Java y operaciones del motor Rust en una misma sesión. La integración general del cargador Fabric sigue pendiente.
