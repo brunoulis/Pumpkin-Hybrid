@@ -1,30 +1,34 @@
-# Hoja de ruta de compatibilidad
+# Hoja de ruta native-first
 
-## 0. Referencia con mods y plugin originales
+Cada hito se verifica y queda en un commit de `feature/compat-runtime`. El compilador, el runtime y sus adaptadores se desarrollan en este crate independiente. Pumpkin conserva la simulación y el estado del mundo.
 
-Fijar Minecraft 1.21.1, NeoForge 21.1.192, Arclight FeudalKings 1.0.1 y Java 21. Ejecutar Clumps, Farmer’s Delight, Create y LuckPerms conjuntamente. Medir la fusión de orbes, el resultado de una receta en una olla, la propagación cinética, el permiso de LuckPerms y la persistencia. El crate Rust prepara y arranca esta instancia. Arclight posee ese mundo de referencia.
+## 0. Evidencia y diseño
 
-## 1. Contrato mínimo con Pumpkin
+- Consultados Graphify y el código de Pumpkin para verificar el tick, la carga de plugins, la API de eventos y los puntos de mutación del mundo.
+- Probados tres tamaños de mod con LuckPerms sobre Arclight 1.21.1. Verificados como referencia una fusión de orbes, la cocción en una olla, una red cinética y la persistencia. [Resultados Arclight](REFERENCE.md)
+- Probados Teleport Commands Fabric y LuckPerms dentro de un entorno Java auxiliar con Pumpkin 26.3 propietario del mundo. Verificados `/sethome`, `/home`, cambios de permisos y reinicio. Este entorno fija el resultado esperado para el futuro piloto nativo. [Resultados con JVM](TELEPORT.md)
+- Investigadas alternativas AOT y propuesta una IR tipada y una prueba con Cranelift a partir de bytecode de un mod original. Verificada la referencia Java para los casos normales y extremos del método inicial. [Investigación y prueba propuesta](AOT.md)
 
-1. Usar Minecraft 26.3 en el primer piloto del motor. Pumpkin acepta ese protocolo y existe Fabric Loader estable para la versión. El perfil 1.21.1 sigue siendo la referencia de Clumps, Farmer’s Delight y Create. Conservar un control vanilla en el commit de Pumpkin elegido.
-2. Probar PatchBukkit y el JAR original de LuckPerms sobre un proceso Pumpkin con cliente real. Verificar qué operaciones de Paper utiliza el puente y qué almacenes escribe. Fijar versiones y compilador conjuntamente por el ABI Rust.
-3. Usar Teleport Commands 1.3.5 como candidato Fabric. Fijar un caso de `/sethome` y `/home` en Fabric de referencia. Inventariar el registro de Brigadier, la identidad del jugador, el acceso a la dimensión y la llamada de teleportación.
-4. Diseñar el contrato mínimo para llevar esa operación al servidor Rust. Ejecutarla a través del punto de entrada público más estrecho de Pumpkin. Probar rechazo sin mutación, timeout y reinicio antes de añadir operaciones.
+## 1. Primer módulo AOT sin JVM
 
-## 2. Primera prueba con Rust como motor
+1. Leer el JAR fijado de Teleport Commands y resolver automáticamente un método real con descriptor exacto. Conservar los offsets de bytecode para los diagnósticos.
+2. Verificar la pila, los tipos y la inicialización de objetos del subconjunto de prueba. Traducir a la IR y emitir un objeto con Cranelift.
+3. Publicar el módulo y su manifiesto. Cargar y ejecutar desde un proceso Rust sin `java` ni `libjvm`, mediante la interfaz de compatibilidad versionada.
+4. Aprobar únicamente cuando el módulo supere toda la tabla diferencial de Java, los rechazos de bytecode incompatible y las pruebas de caché, integridad y ABI. Registrar tiempo de compilación fría y reutilización en caliente. [Casos y criterios](AOT.md)
 
-Ejecutar el JAR Fabric original y el JAR Bukkit original en la misma sesión con el mundo administrado por Pumpkin. Un cliente entra, activa la operación del mod y comprueba que un permiso persistente del plugin cambia el resultado. Comparar los resultados con la instancia de referencia correspondiente y medir el coste del puente. Este paso cumple el mínimo del motor.
+## 2. Primer perfil nativo de juego
 
-El [piloto de Teleport Commands](TELEPORT.md) usa Fabric Loader para descubrir el JAR original, resolver sus dependencias y aplicar sus Mixins en la JVM embebida. El adaptador conecta dos comandos con el jugador de Pumpkin y comprueba un permiso de LuckPerms. El siguiente paso es añadir otro JAR del perfil usando la misma infraestructura, comprobar eventos del tick y sustituir el adaptador específico por un registro de comandos configurable.
+1. Extender el runtime a los objetos, llamadas y bibliotecas del flujo mínimo de comandos. Resolver un JAR Fabric y un JAR Bukkit originales de pivote. Implementar las transformaciones necesarias para esos binarios y sus dependencias antes de compilar.
+2. Conectar ciclo de vida, comandos, permisos y persistencia. Pumpkin valida y ejecuta teletransportes, obtiene la posición y controla el orden de eventos. Las escrituras de cada extensión y las mutaciones del mundo tienen propietarios explícitos.
+3. Umbral funcional del servidor. Un cliente real entra al mismo mundo Pumpkin, usa una acción originada en el módulo del mod y observa que el módulo del plugin la permite o deniega. Los dos JAR se compilan automáticamente y los dos artefactos ejecutados son nativos. Repetir después de reiniciar con caché caliente y sin JVM disponible.
 
-## 3. AOT y expansión
+## 3. Compatibilidad incremental
 
-1. Evaluar Cranelift y HotSpot con un método extraído de una ruta realmente ejecutada. Añadir caché y fallback solo tras demostrar equivalencia, invalidación y medición reproducible.
-2. Extender Fabric a registros y Mixins. Para Clumps probar fusión por valor, recogida y NBT. Para Farmer’s Delight probar sincronización de registros, cocción e inventario persistido. Para Create probar red cinética, desconexión y movimiento de una contraption.
-3. Añadir perfiles NeoForge y Forge al motor y ampliar cobertura Bukkit, Spigot y Paper por contratos. Cada instancia selecciona un cargador.
+- Extender Fabric a contenido y API de eventos. Mantener casos verificables para fusión y NBT, cocción e inventario, y red cinética, entidades de bloque y sincronización del cliente.
+- Incorporar adaptadores Forge y NeoForge, con un cargador por instancia. Los Mixins, transformaciones de bytecode y mappings se validan por perfil. Ampliar Bukkit, Spigot y Paper por contratos observados.
+- Añadir despacho virtual, inicialización de clases, memoria gestionada, excepciones y bibliotecas Java según el corpus. Incorporar reflexión, monitores y carga dinámica con pruebas diferenciales propias.
+- Revisar extensiones sin soporte y emitir motivos accionables. Si se estudia un fallback JVM, documentar su coste y sus resultados por separado.
 
-## 4. Rendimiento y publicación
+## 4. Consumo, rendimiento y publicación
 
-Por perfil, comparar tiempo de arranque, MSPT y TPS bajo carga, CPU, RSS, asignaciones, pausas de GC, coste del puente, tiempo AOT con caché fría/caliente y comportamiento al reiniciar. Usar builds optimizadas, mismo hardware, mundo, cliente y escenario. Medir Pumpkin solo, Pumpkin con plugin y Pumpkin con plugin y mod para atribuir el consumo incremental. Añadir la referencia Java cuando pueda ejecutar el mismo escenario. Registrar versiones exactas, mediana, p95 y p99 de tick, máximos de memoria y límites. Publicar cada hito verificado en `feature/compat-runtime`.
-
-El [banco de pruebas](PERFORMANCE.md) recoge el coste fijo de arranque y reposo de los tres perfiles.
+Comparar el motor nativo con Fabric, Paper y Arclight bajo el mismo hardware, escenario, versión y carga en la medida en que los perfiles permitan equivalencia. Registrar TPS, MSPT y percentiles, CPU, RSS, asignaciones, pausas de GC o gestión equivalente, arranque, coste del runtime y tiempos de compilación y caché. Probar comportamiento y persistencia con la misma carga. El [banco de pruebas existente](PERFORMANCE.md) instrumenta el coste fijo de los perfiles de referencia. El rendimiento del diseño AOT se medirá cuando exista un módulo nativo ejecutable.

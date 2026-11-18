@@ -1,6 +1,6 @@
 # Teleport Commands y LuckPerms en Pumpkin 26.3
 
-El piloto usa Fabric Loader 0.20.1 dentro de la JVM de PatchBukkit. El cargador descubre el JAR original de Teleport Commands 1.3.5 en `mods/` y aplica sus Mixins. LuckPerms 5.5.71 controla el permiso `pumpkinhybrid.home` que comprueba el adaptador al exponer `/sethome` y `/home`. Pumpkin 26.3 conserva la conexión, la posición y el mundo.
+Esta referencia Java fija el comportamiento que deberá repetir el [perfil AOT](AOT.md). Fabric Loader 0.20.1 corre dentro de la JVM de PatchBukkit, descubre el JAR original de Teleport Commands 1.3.5 en `mods/` y aplica sus Mixins. LuckPerms 5.5.71 controla el permiso `pumpkinhybrid.home` que comprueba el adaptador al exponer `/sethome` y `/home`. Pumpkin 26.3 conserva la conexión, la posición y el mundo.
 
 ## Preparación
 

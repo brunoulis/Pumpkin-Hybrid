@@ -1,4 +1,6 @@
-# Línea base del motor Rust
+# Línea base de Pumpkin y pruebas con JVM
+
+El control vanilla verifica el motor Rust. Las pruebas con PatchBukkit, Fabric y LuckPerms verifican comportamiento mediante una JVM de referencia. Los criterios para código generado y ejecución sin JVM están en el [diseño AOT](AOT.md).
 
 ## Selección de la versión
 
@@ -18,11 +20,11 @@ El JAR declara una entrada Fabric, Java 25 y tres Mixins que se aplican a regist
 
 El cliente Minecraft 26.3 con Fabric Loader 0.20.1 también entró a la instancia de Pumpkin con PatchBukkit y LuckPerms. El [piloto integrado](TELEPORT.md) verifica la carga del JAR desde `mods/`, el registro por Mixins y `sethome` y `home` en esa instancia.
 
-### Contrato del primer puente
+### Contratos observados para la prueba AOT
 
-- Compartir la identidad de clases entre Fabric y PatchBukkit. El piloto conserva las definiciones transformadas de Minecraft para que ByteBuddy pueda redefinirlas más tarde. Extender la comprobación a otros Mixins y a sus dependencias.
-- Reutilizar el registro de comandos y los callbacks de teletransporte de PatchBukkit si pueden transportar las llamadas del mod. El punto de entrada Rust para comandos es [Context::register_command_with_aliases](../../../crates/pumpkin-core/src/plugin/api/context.rs). Las operaciones de jugador terminan en [Player::request_teleport o Player::teleport_world](../../../crates/pumpkin-core/src/entity/player.rs).
-- En la prueba sobre Pumpkin, guardar una posición con `sethome`, mover al jugador mediante un comando Rust y ejecutar `home` con el permiso denegado y después concedido. Medir coordenadas y dimensión desde la sesión Rust. Reiniciar y repetir la vuelta con el mismo hogar. Un fallo de la JVM debe dejar la posición Rust intacta y devolver un error al jugador.
+- Resolver la identidad de clases a partir de mappings y transformaciones del perfil. El piloto Java observó redefiniciones con ByteBuddy y fallos de Mixins contra firmas que Paper modifica.
+- La referencia comprobó registro de comandos, permisos y teletransporte. El punto de entrada Rust para comandos es [Context::register_command_with_aliases](../../../crates/pumpkin-core/src/plugin/api/context.rs). Las operaciones de jugador terminan en [Player::request_teleport o Player::teleport_world](../../../crates/pumpkin-core/src/entity/player.rs).
+- Repetir el ciclo de `sethome` y `home` con los módulos AOT, medir coordenadas y dimensión desde la sesión Rust y comprobar permiso y destino después de reiniciar. Un fallo del módulo debe dejar la posición intacta y devolver un diagnóstico al jugador.
 
 ## PatchBukkit
 

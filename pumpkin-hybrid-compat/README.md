@@ -1,8 +1,10 @@
 # Pumpkin Hybrid Compat
 
-Crate independiente para preparar y ejecutar la instancia de referencia de Pumpkin Hybrid. El perfil usa **Minecraft Java 1.21.1, NeoForge 21.1.192 y Arclight FeudalKings 1.0.1**. La JVM ejecuta esta instancia. El [objetivo del motor Rust](docs/hybrid/VISION.md) tiene sus propios criterios de aceptación.
+Workspace independiente de Pumpkin Hybrid. Su objetivo es compilar los JAR originales de mods y plugins a módulos nativos que ejecute Pumpkin sin JVM. El [diseño AOT](docs/hybrid/AOT.md) documenta la primera prueba propuesta y los resultados de referencia.
 
-## Arranque
+## Instancia Java de referencia
+
+El lanzador disponible reproduce un perfil de comparación con **Minecraft Java 1.21.1, NeoForge 21.1.192 y Arclight FeudalKings 1.0.1**.
 
 Desde este directorio, con Cargo, Java 21, `curl` y `sha256sum`:
 
