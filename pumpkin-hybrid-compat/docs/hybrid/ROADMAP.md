@@ -26,3 +26,5 @@ El [piloto de Teleport Commands](TELEPORT.md) usa Fabric Loader para descubrir e
 ## 4. Rendimiento y publicación
 
 Por perfil, comparar tiempo de arranque, MSPT y TPS bajo carga, CPU, RSS, asignaciones, pausas de GC, coste del puente, tiempo AOT con caché fría/caliente y comportamiento al reiniciar. Usar builds optimizadas, mismo hardware, mundo, cliente y escenario. Medir Pumpkin solo, Pumpkin con plugin y Pumpkin con plugin y mod para atribuir el consumo incremental. Añadir la referencia Java cuando pueda ejecutar el mismo escenario. Registrar versiones exactas, mediana, p95 y p99 de tick, máximos de memoria y límites. Publicar cada hito verificado en `feature/compat-runtime`.
+
+El [banco de pruebas](PERFORMANCE.md) recoge el coste fijo de arranque y reposo de los tres perfiles.
