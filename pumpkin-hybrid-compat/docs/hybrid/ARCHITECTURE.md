@@ -32,9 +32,10 @@ Evaluar primero los contratos públicos de Pumpkin para comandos, entidades, eve
 
 | Riesgo | Dependencia y prueba |
 | --- | --- |
-| El cliente modificado no negocia con Pumpkin | Usar una revisión compatible o demostrar que la traducción conserva login, configuración, numeración de registros y canales de extensiones. |
+| El cliente modificado no negocia con Pumpkin | Priorizar un cargador disponible para el protocolo 26.3 del checkout. Antes de anunciar otra versión, demostrar que se conservan login, configuración, numeración de registros y canales de extensiones. |
 | El JAR modifica internals de Minecraft | Inspeccionar sus entradas y mappings. Probar primero un mod Fabric con una superficie reducida. Clumps y Create son pruebas posteriores de Mixins y entidades de bloque. |
-| Un plugin depende de CraftBukkit, NMS o reflexión | Inventariar las clases que toca LuckPerms y evaluar PatchBukkit mediante un prototipo externo. Verificar comandos, permisos y servicios antes de extender cobertura a Spigot y Paper. |
+| Un plugin depende de CraftBukkit, NMS o reflexión | Evaluar [PatchBukkit](https://github.com/Pumpkin-MC/PatchBukkit), que integra una JVM y Paper en modo headless mediante callbacks a Pumpkin. Comprobar que las operaciones de jugador y mundo usan el estado Rust. |
+| Un plugin nativo intercambia layouts de Rust incompatibles | Compilar host y plugin contra la misma revisión y el mismo compilador. Probar login antes de aceptar un binario que parece cargar. |
 | Se bloquea el tick o se duplica una mutación | Medir llamadas a Java y probar caída, timeout y reintento en la misma operación con un solo dueño del estado. |
 | La actualización de Pumpkin rompe el contrato | Fijar commit, aislar el workspace Cargo y repetir los casos vanilla y modded en cada actualización. |
 | AOT cambia resultados o pierde rendimiento | Comparar la misma operación con HotSpot y conservar el fallback verificable. Invalidar por JAR, dependencias, runtime, cargador, mappings, transformaciones y CPU. |

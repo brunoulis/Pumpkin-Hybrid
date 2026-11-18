@@ -26,4 +26,4 @@ En un checkout ya preparado también puedes ejecutar `./target/debug/pumpkin-hyb
 
 ## Estado
 
-[Resultados y pasos de verificación](docs/hybrid/REFERENCE.md) · [Arquitectura](docs/hybrid/ARCHITECTURE.md) · [Hoja de ruta](docs/hybrid/ROADMAP.md)
+[Referencia con tres mods](docs/hybrid/REFERENCE.md) · [Prueba de LuckPerms sobre Pumpkin](docs/hybrid/NATIVE.md) · [Arquitectura](docs/hybrid/ARCHITECTURE.md) · [Hoja de ruta](docs/hybrid/ROADMAP.md)
