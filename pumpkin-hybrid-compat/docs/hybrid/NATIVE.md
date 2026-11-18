@@ -12,9 +12,17 @@ Compilé `cargo build --locked -p pumpkin` con Rust 1.100.0. Un cliente Minecraf
 
 ## Candidato Fabric
 
-Teleport Commands 1.3.5, SHA-256 `bc4d0b93a27fd8e9ef54b5960e4d0ee5df0c2c9c3fe95d84abb8dedc111b7773`, arrancó sin cambios de código en la JVM de referencia con Fabric Loader 0.20.1, Minecraft 26.3 y Temurin 25.0.5+8. Un cliente vanilla conectado permitió ejecutar `sethome smoke` en su contexto. El archivo `world/TeleportCommands/storage.json` guardó el UUID, las coordenadas y la dimensión `minecraft:overworld`. Hace falta una prueba controlada de desplazamiento de ida y vuelta para usar `home` como criterio de aceptación.
+Teleport Commands 1.3.5, SHA-256 `bc4d0b93a27fd8e9ef54b5960e4d0ee5df0c2c9c3fe95d84abb8dedc111b7773`, arrancó sin cambios de código en la JVM de referencia con Fabric Loader 0.20.1, Minecraft 26.3 y Temurin 25.0.5+8. Con un cliente conectado, `sethome verified` guardó la posición `(12.5, -60, 12.5)`. Después de enviar al jugador a `(44.5, -60, 44.5)`, `home verified` lo devolvió a la primera posición. La consola midió los tres estados mediante `data get entity <jugador> Pos`. El archivo `world/TeleportCommands/storage.json` guardó el UUID, las coordenadas y la dimensión `minecraft:overworld`.
 
 El JAR declara una entrada Fabric, Java 25 y tres Mixins que se aplican a registro de comandos, arranque y muerte del jugador. El primer contrato del puente debe permitir registrar la rama Brigadier, resolver el jugador conectado y la dimensión, leer su posición y aplicar una solicitud de teletransporte. El criterio final es que la posición cambie en el mundo de Pumpkin y que un permiso de LuckPerms regule la acción del mismo jugador. [JAR de Teleport Commands](https://modrinth.com/mod/teleport-commands/version/EDcoFIQF) · [Fuentes del mod](https://github.com/MrSn0wy/TeleportCommands)
+
+El cliente Minecraft 26.3 con Fabric Loader 0.20.1 también entró a la instancia de Pumpkin con PatchBukkit y LuckPerms. Esto cubre la entrada del cliente con Fabric Loader. El caso anterior de `sethome` y `home` sigue ejecutándose en el servidor Fabric de referencia.
+
+### Contrato del primer puente
+
+- Probar la carga y transformación de las clases objetivo del JAR antes de que se carguen en la JVM. La compatibilidad de identidad de clases entre Fabric y la JVM headless de PatchBukkit es la primera incógnita. Si el cargador puede descubrir e iniciar el mod sin arrancar un servidor Java, comprobar qué clases de los Mixins ya fueron cargadas y registrar el resultado de cada transformación.
+- Reutilizar el registro de comandos y los callbacks de teletransporte de PatchBukkit si pueden transportar las llamadas del mod. El punto de entrada Rust para comandos es [Context::register_command_with_aliases](../../../crates/pumpkin-core/src/plugin/api/context.rs). Las operaciones de jugador terminan en [Player::request_teleport o Player::teleport_world](../../../crates/pumpkin-core/src/entity/player.rs).
+- En la prueba sobre Pumpkin, guardar una posición con `sethome`, mover al jugador mediante un comando Rust y ejecutar `home` con el permiso denegado y después concedido. Medir coordenadas y dimensión desde la sesión Rust. Reiniciar y repetir la vuelta con el mismo hogar. Un fallo de la JVM debe dejar la posición Rust intacta y devolver un error al jugador.
 
 ## PatchBukkit
 
